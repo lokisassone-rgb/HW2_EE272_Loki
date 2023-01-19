@@ -100,6 +100,11 @@ module deaggregator_tb;
     $vcdplusfile("dump.vcd");
     $vcdplusmemon();
     $vcdpluson(0, deaggregator_tb);
+    `ifdef FSDB
+    $fsdbDumpfile("dump.fsdb");
+    $fsdbDumpvars(0, deaggregator_tb);
+    $fsdbDumpMDA();
+    `endif
     #2000;
     $finish(2);
   end

@@ -1,4 +1,3 @@
-
 generate_layer: cpp/conv_gold.cpp cpp/conv_gold_tiled.cpp cpp/conv_tb.cpp
 	g++ -g -std=c++11 cpp/conv_tb.cpp -o conv_tb
 	./conv_tb

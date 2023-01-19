@@ -18,7 +18,8 @@ module aggregator
   reg [COUNTER_WIDTH - 1 : 0] count_r;
   
   reg [DATA_WIDTH - 1 : 0] receiver_data_unpacked [FETCH_WIDTH - 1 : 0]; 
-  
+  wire sender_deq_w;
+
   assign sender_deq_w = rst_n && sender_empty_n && receiver_full_n;
   assign sender_deq = sender_deq_w;
 

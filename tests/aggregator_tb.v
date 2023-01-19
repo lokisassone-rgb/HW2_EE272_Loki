@@ -99,6 +99,11 @@ module aggregator_tb;
     $vcdplusfile("dump.vcd");
     $vcdplusmemon();
     $vcdpluson(0, aggregator_tb);
+    `ifdef FSDB
+    $fsdbDumpfile("dump.fsdb");
+    $fsdbDumpvars(0, aggregator_tb);
+    $fsdbDumpMDA();
+    `endif
     #2000;
     $finish(2);
   end

@@ -137,9 +137,13 @@ def test_deaggregator_tb():
     print("Running test_deaggregator_tb")
     return run_process(['vcs', '-full64', '-sverilog', '-timescale=1ns/1ps', '-debug_access+pp', 'tests/deaggregator_tb.v', 'verilog/deaggregator.v', 'verilog/fifo.v', 'verilog/SizedFIFO.v'])
 
-def test_double_buffer_tb():
-    print("Running test_double_buffer_tb")
-    return run_process(['vcs', '-full64', '-sverilog', '-timescale=1ns/1ps', '-debug_access+pp', 'tests/double_buffer_tb.v', 'verilog/double_buffer.v', 'verilog/ram_sync_1r1w.v'])
+def test_ifmap_double_buffer_tb():
+    print("Running test_ifmap_double_buffer_tb")
+    return 1, run_process(['vcs', '-full64', '-sverilog', '-timescale=1ns/1ps', '-debug_access+pp', 'tests/ifmap_double_buffer_tb.v', 'verilog/double_buffer.v', 'verilog/ram_sync_1r1w.v'])
+
+def test_weight_double_buffer_tb():
+    print("Running test_weight_double_buffer_tb")
+    return 1, run_process(['vcs', '-full64', '-sverilog', '-timescale=1ns/1ps', '-debug_access+pp', 'tests/weight_double_buffer_tb.v', 'verilog/double_buffer.v', 'verilog/ram_sync_1r1w.v'])
 
 def test_accumulation_buffer_tb():
     print("Running test_accumulation_buffer_tb")

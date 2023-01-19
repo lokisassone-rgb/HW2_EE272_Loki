@@ -203,6 +203,11 @@ module ram_sync_1r1w_tb;
         $vcdplusfile("dump.vcd");
         $vcdplusmemon();
         $vcdpluson(0, ram_sync_1r1w_tb);
+        `ifdef FSDB
+        $fsdbDumpfile("dump.fsdb");
+        $fsdbDumpvars(0, ram_sync_1r1w_tb);
+        $fsdbDumpMDA();
+        `endif
         #20000000;
         $finish(2);
     end

@@ -1,4 +1,4 @@
-// Write a directed test for the double buffer module. Make sure you test 
+// Write a directed test for the weight double buffer module. Make sure you test 
 // all its ports and its behaviour when your switch banks.
 
 // Your code starts here

@@ -51,6 +51,11 @@ module adr_gen_sequential_tb;
     $vcdplusfile("dump.vcd");
     $vcdplusmemon();
     $vcdpluson(0, adr_gen_sequential_tb);
+    `ifdef FSDB
+    $fsdbDumpfile("dump.fsdb");
+    $fsdbDumpvars(0, adr_gen_sequential_tb);
+    $fsdbDumpMDA();
+    `endif
     #20000000;
     $finish(2);
   end

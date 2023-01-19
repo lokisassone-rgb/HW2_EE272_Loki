@@ -263,6 +263,11 @@ module fifo_tb;
         $vcdplusfile("dump.vcd");
         $vcdplusmemon();
         $vcdpluson(0, fifo_tb);
+        `ifdef FSDB
+        $fsdbDumpfile("dump.fsdb");
+    		$fsdbDumpvars(0, fifo_tb);
+    		$fsdbDumpMDA();
+			  `endif
         #20000000;
         $finish(2);
     end

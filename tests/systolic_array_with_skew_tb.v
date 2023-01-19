@@ -185,6 +185,11 @@ module systolic_array_with_skew_tb;
     $vcdplusfile("dump.vcd");
     $vcdplusmemon();
     $vcdpluson(0, systolic_array_with_skew_tb);
+    `ifdef FSDB
+    $fsdbDumpfile("dump.fsdb");
+    $fsdbDumpvars(0, systolic_array_with_skew_tb);
+    $fsdbDumpMDA();
+    `endif
     #20000000;
     $finish(2);
   end
