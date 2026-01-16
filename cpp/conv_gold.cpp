@@ -13,6 +13,19 @@ void conv_gold(int16_t ifmap[(OY-1)*STRIDE+FY][(OX-1)*STRIDE+FX][IC],
   // ofmap array. Make sure you take STRIDE into account.
  
   // Your code starts here
+  memset(ofmap, 0, sizeof(int32_t)*OY*OX*OC); //initialize ofmap to zero
 
-  // Your code ends here
+  for (int oc =0; oc< OC; oc++) { //output channels
+    for (int ic =0; ic< IC; ic++){ //intput channels
+      for (int oy=0; oy< OY; oy++){ //output height
+        for (int ox=0; ox<OX; ox++){ //output width
+          for (int fy=0; fy< FY; fy++){ //kernel height
+            for (int fx=0; fx<FX; fx++){ //kernel width
+              ofmap[oy][ox][oc] += ifmap[fy + oy*STRIDE][fx + ox*STRIDE][ic] *weight[fy][fx][ic][oc]; //element-wise MAC with stride
+            }
+          }
+        }
+      }
+    }
+  }
 }
