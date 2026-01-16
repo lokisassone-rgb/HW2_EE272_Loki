@@ -33,6 +33,23 @@ module mac
   // Synchronously reset all registers when rst_n is low.
 
   // Your code starts here
+  always @(posedge clk) begin
+    if (!rst_n) begin
+      weight_r <= 0;
+      ifmap_r <= 0;
+      ofmap_r <= 0;
+    end else begin
+      if (weight_wen) begin
+        weight_r <= weight_in;
+      end
+      if (en) begin
+        ifmap_r <= ifmap_in;
+        ofmap_r <= weight_r * ifmap_in + ofmap_in;
+      end
+    end
+  end
 
+  assign ifmap_out = ifmap_r;
+  assign ofmap_out = ofmap_r;
   // Your code ends here
 endmodule
