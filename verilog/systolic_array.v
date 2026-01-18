@@ -107,21 +107,71 @@ wire signed [OFMAP_WIDTH - 1 : 0] ofmap_w [ARRAY_WIDTH - 1 : 0][ARRAY_HEIGHT - 1
 generate
   for (x = 0; x < ARRAY_WIDTH; x = x + 1) begin: col
     for (y = 0; y < ARRAY_HEIGHT; y = y + 1) begin: row
-      mac #(
-        .IFMAP_WIDTH(IFMAP_WIDTH),
-        .WEIGHT_WIDTH(WEIGHT_WIDTH),
-        .OFMAP_WIDTH(OFMAP_WIDTH)
-      ) mac_inst (
-        .clk(clk),
-        .rst_n(rst_n),
-        .en(en),
-        .weight_wen(weight_wen_w[x][y]),
-        .ifmap_in( (x == 0) ? ifmap_in[y] : ifmap_w[x-1][y] ),
-        .weight_in(weight_in_skewed[x]),
-        .ofmap_in( (y == 0) ? ofmap_in[x] : ofmap_w[x][y-1] ),
-        .ifmap_out(ifmap_w[x][y]),
-        .ofmap_out(ofmap_w[x][y])
-      );
+      if (x == 0 && y == 0) begin
+        mac #(
+          .IFMAP_WIDTH(IFMAP_WIDTH),
+          .WEIGHT_WIDTH(WEIGHT_WIDTH),
+          .OFMAP_WIDTH(OFMAP_WIDTH)
+        ) mac_inst (
+          .clk(clk),
+          .rst_n(rst_n),
+          .en(en),
+          .weight_wen(weight_wen_w[x][y]),
+          .ifmap_in(ifmap_in[y]),
+          .weight_in(weight_in_skewed[x]),
+          .ofmap_in(ofmap_in[x]),
+          .ifmap_out(ifmap_w[x][y]),
+          .ofmap_out(ofmap_w[x][y])
+        );
+      end else if (x == 0) begin
+        mac #(
+          .IFMAP_WIDTH(IFMAP_WIDTH),
+          .WEIGHT_WIDTH(WEIGHT_WIDTH),
+          .OFMAP_WIDTH(OFMAP_WIDTH)
+        ) mac_inst (
+          .clk(clk),
+          .rst_n(rst_n),
+          .en(en),
+          .weight_wen(weight_wen_w[x][y]),
+          .ifmap_in(ifmap_in[y]),
+          .weight_in(weight_in_skewed[x]),
+          .ofmap_in(ofmap_w[x][y-1]),
+          .ifmap_out(ifmap_w[x][y]),
+          .ofmap_out(ofmap_w[x][y])
+        );
+      end else if (y == 0) begin
+        mac #(
+          .IFMAP_WIDTH(IFMAP_WIDTH),
+          .WEIGHT_WIDTH(WEIGHT_WIDTH),
+          .OFMAP_WIDTH(OFMAP_WIDTH)
+        ) mac_inst (
+          .clk(clk),
+          .rst_n(rst_n),
+          .en(en),
+          .weight_wen(weight_wen_w[x][y]),
+          .ifmap_in(ifmap_w[x-1][y]),
+          .weight_in(weight_in_skewed[x]),
+          .ofmap_in(ofmap_in[x]),
+          .ifmap_out(ifmap_w[x][y]),
+          .ofmap_out(ofmap_w[x][y])
+        );
+      end else begin
+        mac #(
+          .IFMAP_WIDTH(IFMAP_WIDTH),
+          .WEIGHT_WIDTH(WEIGHT_WIDTH),
+          .OFMAP_WIDTH(OFMAP_WIDTH)
+        ) mac_inst (
+          .clk(clk),
+          .rst_n(rst_n),
+          .en(en),
+          .weight_wen(weight_wen_w[x][y]),
+          .ifmap_in(ifmap_w[x-1][y]),
+          .weight_in(weight_in_skewed[x]),
+          .ofmap_in(ofmap_w[x][y-1]),
+          .ifmap_out(ifmap_w[x][y]),
+          .ofmap_out(ofmap_w[x][y])
+        );
+      end
     end
   end
 endgenerate
