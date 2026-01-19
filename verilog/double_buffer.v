@@ -29,5 +29,46 @@ module double_buffer
 
   // Your code starts here
 
+  reg read_bank; //which bank is on read mode so 0 means read from bank 0 and write from bank 1
+  
+  wire [BANK_ADDR_WIDTH:0] radr_with_bank;
+  wire [BANK_ADDR_WIDTH:0] wadr_with_bank;
+
+  //as document says everytime on clock edge we check if rst_n is set to 0 to reset the read bank to 0 or
+  //if we want to switch which bank is read
+
+  always_ff @(posedge clk) begin 
+    if (!rst_n) begin
+      read_bank <= 0;
+    end else if (switch_banks) begin
+      read_bank <= ~read_bank;
+    end
+  end
+
+  //need to add which bank to read and write from based on read_bank as MSB partitions SRAM into 2 buffers
+
+  assign radr_with_bank = {read_bank, radr};
+  assign wadr_with_bank = {~read_bank, wadr};
+
+  //now need to instantiate SRAM 1r1w based on above variables, need to increase addr_width by 1 because
+  //we added 1 bit for splitting the SRAM into 2 for double buffering. Also need to multiply depth by 2
+  //because depth is correlated with bank addr width
+
+  ram_sync_1r1w
+    #(
+      .DATA_WIDTH(DATA_WIDTH),
+      .ADDR_WIDTH(BANK_ADDR_WIDTH + 1),
+      .DEPTH(BANK_DEPTH*2)
+    ) ram_inst_read_0 (
+      .clk(clk),
+      .ren(ren),
+      .wen(wen),
+      .wadr(wadr_with_bank),
+      .wdata(wdata),
+      .radr(radr_with_bank),
+      .rdata(rdata)
+    );
+  
+
   // Your code ends here
 endmodule
