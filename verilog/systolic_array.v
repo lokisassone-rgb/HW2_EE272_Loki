@@ -39,6 +39,12 @@ module systolic_array
   
   wire signed [WEIGHT_WIDTH - 1 : 0] weight_in_skewed [ARRAY_WIDTH - 1 : 0];
 
+//the code from lines 43-53 make a skew_registers instant (think of it like filling in a function
+//that is skewing the weigh_in by cycles so it can be inputted into the systolic
+//array. The name of this instance is weight_in_skew_registers_inst and it has
+//the same clk as the input clk, rst_n, and uses weight_en to know if enable move.
+//The input data is the module's weight_in and the data output is the skewed weights
+
   skew_registers
   #(
     .DATA_WIDTH(WEIGHT_WIDTH),
@@ -104,6 +110,7 @@ module systolic_array
 wire signed [IFMAP_WIDTH - 1 : 0] ifmap_w [ARRAY_WIDTH - 1 : 0][ARRAY_HEIGHT - 1 : 0];
 wire signed [OFMAP_WIDTH - 1 : 0] ofmap_w [ARRAY_WIDTH - 1 : 0][ARRAY_HEIGHT - 1 : 0];
 
+/*
 generate
   for (x = 0; x < ARRAY_WIDTH; x = x + 1) begin: col
     for (y = 0; y < ARRAY_HEIGHT; y = y + 1) begin: row
@@ -181,6 +188,96 @@ generate
     assign ofmap_out[x] = ofmap_w[x][ARRAY_HEIGHT - 1];
   end
 endgenerate
+*/
 
-  // Your code ends here
+
+wire signed [IFMAP_WIDTH - 1 : 0] ifmap_w [ARRAY_WIDTH - 1 : 0] [ARRAY_HEIGHT - 1 : 0];
+wire signed [OFMAP_WIDTH - 1 : 0] ofmap_w [ARRAY_WIDTH - 1 : 0] [ARRAY_HEIGHT - 1 : 0];
+
+genvar x, y;
+
+generate
+  for (x = 0; x < ARRAY_WIDTH; x = x + 1) begin: row_loop
+    for (y = 0; y < ARRAY_HEIGHT; y = y + 1) begin: col_loop
+      if (x==0 && y==0) begin
+      mac
+      #(
+        .IFMAP_WIDTH(IFMAP_WIDTH),
+        .WEIGHT_WIDTH(WEIGHT_WIDTH),
+        .OFMAP_WIDTH(OFMAP_WIDTH)
+      ) mac_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .en(en),
+        .weight_wen(weight_wen_w[x][y]),
+        .ifmap_in(ifmap_in[x]),
+        .weight_in(weight_in_skewed[x]),
+        .ofmap_in(ofmap_in[y]),
+        .ifmap_out(ifmap_w[x][y]),
+        .ofmap_out(ofmap_w[x][y])
+      );
+      end else if (x==0 && y>0) begin
+      mac
+      #(
+        .IFMAP_WIDTH(IFMAP_WIDTH),
+        .WEIGHT_WIDTH(WEIGHT_WIDTH),
+        .OFMAP_WIDTH(OFMAP_WIDTH)
+      ) mac_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .en(en),
+        .weight_wen(weight_wen_w[x][y]),
+        .ifmap_in(ifmap_in[y]),
+        .weight_in(weight_in_skewed[x]),
+        .ofmap_in(ofmap_w[x][y-1]),
+        .ifmap_out(ifmap_w[x][y]),
+        .ofmap_out(ofmap_w[x][y])
+      );
+      end else if (y==0 && x>0) begin
+      mac
+      #(
+        .IFMAP_WIDTH(IFMAP_WIDTH),
+        .WEIGHT_WIDTH(WEIGHT_WIDTH),
+        .OFMAP_WIDTH(OFMAP_WIDTH)
+      ) mac_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .en(en),
+        .weight_wen(weight_wen_w[x][y]),
+        .ifmap_in(ifmap_w[x-1][y]),
+        .weight_in(weight_in_skewed[x]),
+        .ofmap_in(ofmap_in[x]),
+        .ifmap_out(ifmap_w[x][y]),
+        .ofmap_out(ofmap_w[x][y])
+      );
+      end else begin
+      mac
+      #(
+        .IFMAP_WIDTH(IFMAP_WIDTH),
+        .WEIGHT_WIDTH(WEIGHT_WIDTH),
+        .OFMAP_WIDTH(OFMAP_WIDTH)
+      ) mac_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .en(en),
+        .weight_wen(weight_wen_w[x][y]),
+        .ifmap_in(ifmap_w[x-1],[y]),
+        .weight_in(weight_in_skewed[x]),
+        .ofmap_in(ofmap_w[x][y-1]),
+        .ifmap_out(ifmap_w[x][y]),
+        .ofmap_out(ofmap_w[x][y])
+      );
+      end
+    end
+  end
+endgenerate
+
+genvar x;
+
+generate
+  for (x = 0; x < ARRAY_WIDTH; x = x + 1) begin: row_loop
+    assign ofmap_out[x] = ofmap_w[x][ARRAY_HEIGHT - 1];
+  end
+endgenerate
+
 endmodule
