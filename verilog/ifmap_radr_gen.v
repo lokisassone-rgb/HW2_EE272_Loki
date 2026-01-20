@@ -47,18 +47,34 @@ module ifmap_radr_gen
       fy_cnt <= 0;
       ic_cnt <= 0;
       adr <= 0;
-    end
-    else begin
+    end else begin
       if (adr_en) begin
-        for (ic_cnt = 0; ic_cnt < config_IC1; ic_cnt = ic_cnt + 1) begin
-          for (fy_cnt = 0; fy_cnt < config_FY; fy_cnt = fy_cnt + 1) begin
-            for (fx_cnt = 0; fx_cnt < config_FX; fx_cnt = fx_cnt + 1) begin
-              for (oy_cnt = 0; oy_cnt < config_OY0; oy_cnt = oy_cnt + 1) begin
-                for (ox_cnt = 0; ox_cnt < config_OX0; ox_cnt = ox_cnt + 1) begin
-                  adr <= config_IX0 + (ox_cnt * config_STRIDE) + 
-                         ((config_IY0 + (oy_cnt * config_STRIDE) + fy_cnt) * 
-                         (config_OX0 * config_STRIDE)) + 
-                         (ic_cnt * (config_OX0 * config_OY0 * config_STRIDE * config_STRIDE));
+        // Compute address from current counters
+        adr <= (ic_cnt * (config_IX0 * config_IY0))
+               + ((fy_cnt + (config_STRIDE * oy_cnt)) * config_IX0)
+               + (fx_cnt + (config_STRIDE * ox_cnt));
+
+        // Increment counters with carry: ox -> oy -> fx -> fy -> ic
+        if (ox_cnt < (config_OX0 - 1)) begin
+          ox_cnt <= ox_cnt + 1;
+        end else begin
+          ox_cnt <= 0;
+          if (oy_cnt < (config_OY0 - 1)) begin
+            oy_cnt <= oy_cnt + 1;
+          end else begin
+            oy_cnt <= 0;
+            if (fx_cnt < (config_FX - 1)) begin
+              fx_cnt <= fx_cnt + 1;
+            end else begin
+              fx_cnt <= 0;
+              if (fy_cnt < (config_FY - 1)) begin
+                fy_cnt <= fy_cnt + 1;
+              end else begin
+                fy_cnt <= 0;
+                if (ic_cnt < (config_IC1 - 1)) begin
+                  ic_cnt <= ic_cnt + 1;
+                end else begin
+                  ic_cnt <= 0;
                 end
               end
             end
