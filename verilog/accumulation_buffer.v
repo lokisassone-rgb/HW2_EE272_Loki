@@ -45,6 +45,6 @@ module accumulation_buffer
   // array and vice versa.
 
   // Your code starts here
-
+  
   // Your code ends here
 endmodule
