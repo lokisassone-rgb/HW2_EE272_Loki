@@ -100,7 +100,6 @@ module accumulation_buffer_tb;
     assert(rdata ==64'd1) else $error("Test 3b failed! it read data when ren=0!");
 
     $display("Starting Test Case 4: Simultaneous read/write at same address");
-    #20 switch_ba"nks <= 0;  // Reset to known state
     #20 wen <=1; wadr <= 7'd24; wdata <= 64'd1;
     #20 wen <=0;
     #20 wen <=1; wadr <= 7'd24; wdata <= 64'd9; ren <=1; radr <= 7'd24; //expect to read old data
