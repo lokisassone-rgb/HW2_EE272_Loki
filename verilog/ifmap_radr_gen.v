@@ -5,7 +5,7 @@ module ifmap_radr_gen
   input clk,
   input rst_n,
   input adr_en,
-  output [BANK_ADDR_WIDTH - 1 : 0] adr,
+  output reg [BANK_ADDR_WIDTH - 1 : 0] adr, //Changed to reg type
   input config_en,
   input [BANK_ADDR_WIDTH*8 - 1 : 0] config_data
 );
@@ -36,6 +36,37 @@ module ifmap_radr_gen
   // all registers when rst_n is low.  
   
   // Your code starts here
+  //Adding Five counters for OX, OY, FX, FY, IC
+  reg [BANK_ADDR_WIDTH - 1 : 0] ox_cnt, oy_cnt, fx_cnt, fy_cnt, ic_cnt; 
+  
+  always @(posedge clk) begin 
+    if (!rst_n) begin
+      ox_cnt <= 0;
+      oy_cnt <= 0;
+      fx_cnt <= 0;
+      fy_cnt <= 0;
+      ic_cnt <= 0;
+      adr <= 0;
+    end
+    else begin
+      if (adr_en) begin
+        for (ic_cnt = 0; ic_cnt < config_IC1; ic_cnt = ic_cnt + 1) begin
+          for (fy_cnt = 0; fy_cnt < config_FY; fy_cnt = fy_cnt + 1) begin
+            for (fx_cnt = 0; fx_cnt < config_FX; fx_cnt = fx_cnt + 1) begin
+              for (oy_cnt = 0; oy_cnt < config_OY0; oy_cnt = oy_cnt + 1) begin
+                for (ox_cnt = 0; ox_cnt < config_OX0; ox_cnt = ox_cnt + 1) begin
+                  adr <= config_IX0 + (ox_cnt * config_STRIDE) + 
+                         ((config_IY0 + (oy_cnt * config_STRIDE) + fy_cnt) * 
+                         (config_OX0 * config_STRIDE)) + 
+                         (ic_cnt * (config_OX0 * config_OY0 * config_STRIDE * config_STRIDE));
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
 
   // Your code ends here
 endmodule
