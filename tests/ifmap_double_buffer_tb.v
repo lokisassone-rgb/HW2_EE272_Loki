@@ -102,6 +102,7 @@ module ifmap_double_buffer_tb_v;
             #20;
             #20 wen <= 1; wadr <= addr; wdata <= 64'h100;
             #40;
+            #20 wen <=0;
           end
         end
       end
@@ -113,19 +114,17 @@ module ifmap_double_buffer_tb_v;
       for (int j = 0; j < IC1; j++) begin
         for (int k = 0; k < IY0; k++) begin
           for (int l = 0; l < IX0; l++) begin
-            #40;
-            #20 addr = l + k*IX0 + j*IX0*IY0 + i*IX0*IY0*IC1;
-            #20;
+            addr = l + k*IX0 + j*IX0*IY0 + i*IX0*IY0*IC1;
             #20 ren <=1; radr <= addr;
             #40;
             $display("Test 3: rdata = %h, expected = 100", rdata);
             assert(rdata == 64'h100) else $error("Test 3 failed!");
-            #40;
+            #20 ren <= 0;
           end
         end
       end
     end
-    #20 wen <=0; ren <=0;
+    #20;
 
     $display("Starting Test Case 4: Check both ren and wen disabled don't change outputs");
     #20 wen <= 1; wadr <= 7'd22; wdata <= 64'd1;
