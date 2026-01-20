@@ -45,6 +45,7 @@ module accumulation_buffer
   // array and vice versa.
 
   // Your code starts here
+<<<<<<< HEAD
   reg read_only_bank; //which bank is on read only mode so 0 means read only from bank 0 and write/read from bank 1
 
   //as document says everytime on clock edge we check if rst_n is set to 0 to reset the read bank to 0 or
@@ -113,5 +114,8 @@ module accumulation_buffer
 
   assign rdata = (read_only_bank == 0) ? rdata_bank1 : rdata_bank0;
   assign rdata_wb = (read_only_bank == 0) ? rdata_bank0 : rdata_bank1;
+=======
+  
+>>>>>>> f2d3c1dbe993daed802b26492f8a73a364f8eb4f
   // Your code ends here
 endmodule

@@ -5,7 +5,7 @@ module adr_gen_sequential
   input clk,
   input rst_n,
   input adr_en,
-  output [BANK_ADDR_WIDTH - 1 : 0] adr,
+  output logic [BANK_ADDR_WIDTH - 1 : 0] adr,  // Changed Address output to logic type
   input config_en,
   input [BANK_ADDR_WIDTH - 1 : 0] config_data
 );
@@ -28,6 +28,23 @@ module adr_gen_sequential
   // convolution).
 
   // Your code starts here
-
+  always_ff @(posedge clk ) begin
+    if (!rst_n) begin
+      config_block_max <= '0;
+      adr <= '0;
+    end
+    else begin
+    if (config_en) begin
+      config_block_max <= config_data;
+    end
+    if (adr_en) begin
+      if (adr == config_block_max) begin
+        adr <= '0;
+      end else begin
+        adr <= adr + 1;
+      end 
+      end
+    end
+  end
   // Your code ends here
 endmodule
