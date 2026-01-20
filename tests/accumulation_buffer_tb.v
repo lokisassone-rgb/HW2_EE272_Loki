@@ -46,7 +46,7 @@ module accumulation_buffer_tb;
 
   initial begin
     clk <= 0;
-    rst_n <= 1;
+    rst_n <= 0;  // Start in reset
     switch_banks <= 0;
     ren <= 0;
     radr <= 0;
@@ -55,6 +55,10 @@ module accumulation_buffer_tb;
     wdata <= 0;
     ren_wb <= 0;
     radr_wb <= 0;
+
+    // Apply reset pulse
+    #20 rst_n <= 1;  // Release reset after 20ns
+    #20;  // Wait for reset to take effect
 
     $display("Starting Test Case 1: Write to Systolic Bank and read back");
     #20 wen <=1; wadr <= 7'b0000111; wdata <= 64'hABCD;
