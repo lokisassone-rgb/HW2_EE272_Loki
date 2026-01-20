@@ -73,7 +73,6 @@ module accumulation_buffer_tb;
     #20 wen <= 1; wadr <= 7'd20; wdata <= 64'hBBBB;
     #20 wen <= 0;  // Complete the write
     #20 switch_banks <= 1;  // Request bank switch
-    #20 switch_banks <= 0;  // Clear switch signal (only needs 1 cycle pulse)
     #20 wen <= 1; wadr <= 7'd20; wdata <= 64'hAAAA;  // Write to new systolic bank
     #20 wen <= 0;  // Complete the write
     #20 ren_wb <= 1; radr_wb <= 7'd20;
