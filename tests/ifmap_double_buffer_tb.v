@@ -136,11 +136,11 @@ module ifmap_double_buffer_tb_v;
     assert(rdata ==64'd1) else $error("Test 4a failed! it wrote data when wen=0!");
     #20 switch_banks <= 1;
     #20;
-    #20 wen <= 1; wadr <= 7'd22; wdata <= 64'd3;
+    #20 wen <= 1; wadr <= 7'd23; wdata <= 64'd3;
     #20
     #20 switch_banks <= 0;
     #20;
-    #20 ren <= 0; radr <= 7'd22;
+    #20 ren <= 0; radr <= 7'd23;
     #40
     $display("Test 4b: rdata = %h, expected = 1", rdata);
     assert(rdata ==64'd1) else $error("Test 4b failed! it read data when ren=0!");
