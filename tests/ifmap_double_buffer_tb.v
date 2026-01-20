@@ -68,7 +68,6 @@ module ifmap_double_buffer_tb_v;
     #20 wen <= 1; wadr <= 7'd10; wdata <= 64'h1;
     #20 wen <= 0;
     #20 switch_banks <= 1;
-    #20 switch_banks <= 0;
     #20 wen <= 1; wadr <= 7'd10; wdata <= 64'h2;
     #20 wen <= 0;
     #20;    
@@ -84,7 +83,6 @@ module ifmap_double_buffer_tb_v;
     #40; // Wait for read latency
     $display("Test 2a: rdata = %h, expected = 1", rdata);
     assert(rdata == 64'h1) else $error("Test 2a failed!");
-    #20 switch_banks <= 1;
     #20 switch_banks <= 0;
     #20;
     #20 ren <= 1; radr <= 7'd11;
@@ -109,7 +107,6 @@ module ifmap_double_buffer_tb_v;
     end
     #20 wen <=0;
     #20 switch_banks <= 1;
-    #20 switch_banks <= 0;
     #20;
     for (int i = 0; i < IC0; i++) begin
       for (int j = 0; j < IC1; j++) begin
@@ -119,6 +116,7 @@ module ifmap_double_buffer_tb_v;
             #20 addr = l + k*IX0 + j*IX0*IY0 + i*IX0*IY0*IC1;
             #20 ren <=1; radr <= addr;
             #40
+            $display("Test 3: rdata = %h, expected = 100", rdata);
             assert(rdata == 64'h100) else $error("Test 3 failed!");
           end
         end
