@@ -70,10 +70,12 @@ module accumulation_buffer_tb;
     #20 ren <=0;
 
     $display("Starting Test Case 2: Check correct bank is being written/read and switching works");
-    #20 switch_banks <= 0;
     #20 wen <= 1; wadr <= 7'd20; wdata <= 64'hBBBB;
-    #20 switch_banks <= 1;
-    #20 wen <= 1; wadr <= 7'd20; wdata <= 64'hAAAA;
+    #20 wen <= 0;  // Complete the write
+    #20 switch_banks <= 1;  // Request bank switch
+    #20 switch_banks <= 0;  // Clear switch signal (only needs 1 cycle pulse)
+    #20 wen <= 1; wadr <= 7'd20; wdata <= 64'hAAAA;  // Write to new systolic bank
+    #20 wen <= 0;  // Complete the write
     #20 ren_wb <= 1; radr_wb <= 7'd20;
     #40 // Wait for read latency
     $display("Test 2a: rdata_wb = %h, expected = BBBB", rdata_wb);
@@ -98,7 +100,6 @@ module accumulation_buffer_tb;
     $display("Test 3b: rdata = %h, expected = 1", rdata);
     assert(rdata ==64'd1) else $error("Test 3b failed! it read data when ren=0!");
     
-    $display("All tests passed!");
   end
 
   initial begin
