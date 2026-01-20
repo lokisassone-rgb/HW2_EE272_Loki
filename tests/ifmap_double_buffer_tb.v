@@ -97,10 +97,11 @@ module ifmap_double_buffer_tb_v;
       for (int j = 0; j < IC1; j++) begin
         for (int k = 0; k < IY0; k++) begin
           for (int l = 0; l < IX0; l++) begin
-            #20 
+            #40; 
             #20 addr = l + k*IX0 + j*IX0*IY0 + i*IX0*IY0*IC1;
+            #20;
             #20 wen <= 1; wadr <= addr; wdata <= 64'h100;
-
+            #40;
           end
         end
       end
@@ -112,12 +113,14 @@ module ifmap_double_buffer_tb_v;
       for (int j = 0; j < IC1; j++) begin
         for (int k = 0; k < IY0; k++) begin
           for (int l = 0; l < IX0; l++) begin
-            #20 
+            #40;
             #20 addr = l + k*IX0 + j*IX0*IY0 + i*IX0*IY0*IC1;
+            #20;
             #20 ren <=1; radr <= addr;
-            #40
+            #40;
             $display("Test 3: rdata = %h, expected = 100", rdata);
             assert(rdata == 64'h100) else $error("Test 3 failed!");
+            #40;
           end
         end
       end
