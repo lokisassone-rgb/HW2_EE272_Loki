@@ -49,37 +49,51 @@ module ifmap_radr_gen
       adr <= 0;
     end else begin
       if (adr_en) begin
-        // Compute address from current counters
-        adr <= (ic_cnt * (config_IX0 * config_IY0))
-               + ((fy_cnt + (config_STRIDE * oy_cnt)) * config_IX0)
-               + (fx_cnt + (config_STRIDE * ox_cnt));
+        // Compute next counters (carry order: ox -> oy -> fx -> fy -> ic)
+        reg [BANK_ADDR_WIDTH - 1 : 0] next_ox, next_oy, next_fx, next_fy, next_ic;
+        next_ox = ox_cnt;
+        next_oy = oy_cnt;
+        next_fx = fx_cnt;
+        next_fy = fy_cnt;
+        next_ic = ic_cnt;
 
-        // Increment counters with carry: ox -> oy -> fx -> fy -> ic
         if (ox_cnt < (config_OX0 - 1)) begin
-          ox_cnt <= ox_cnt + 1;
+          next_ox = ox_cnt + 1;
         end else begin
-          ox_cnt <= 0;
+          next_ox = 0;
           if (oy_cnt < (config_OY0 - 1)) begin
-            oy_cnt <= oy_cnt + 1;
+            next_oy = oy_cnt + 1;
           end else begin
-            oy_cnt <= 0;
+            next_oy = 0;
             if (fx_cnt < (config_FX - 1)) begin
-              fx_cnt <= fx_cnt + 1;
+              next_fx = fx_cnt + 1;
             end else begin
-              fx_cnt <= 0;
+              next_fx = 0;
               if (fy_cnt < (config_FY - 1)) begin
-                fy_cnt <= fy_cnt + 1;
+                next_fy = fy_cnt + 1;
               end else begin
-                fy_cnt <= 0;
+                next_fy = 0;
                 if (ic_cnt < (config_IC1 - 1)) begin
-                  ic_cnt <= ic_cnt + 1;
+                  next_ic = ic_cnt + 1;
                 end else begin
-                  ic_cnt <= 0;
+                  next_ic = 0;
                 end
               end
             end
           end
         end
+
+        // Compute address from next counters
+        adr <= (next_ic * (config_IX0 * config_IY0))
+               + ((next_fy + (config_STRIDE * next_oy)) * config_IX0)
+               + (next_fx + (config_STRIDE * next_ox));
+
+        // Update counters
+        ox_cnt <= next_ox;
+        oy_cnt <= next_oy;
+        fx_cnt <= next_fx;
+        fy_cnt <= next_fy;
+        ic_cnt <= next_ic;
       end
     end
   end
