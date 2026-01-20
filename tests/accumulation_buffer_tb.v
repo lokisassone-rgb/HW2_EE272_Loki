@@ -98,7 +98,22 @@ module accumulation_buffer_tb;
     #40
     $display("Test 3b: rdata = %h, expected = 1", rdata);
     assert(rdata ==64'd1) else $error("Test 3b failed! it read data when ren=0!");
+
+    $display("Starting Test Case 4: Simultaneous read/write at same address");
+    #20 switch_ba"nks <= 0;  // Reset to known state
+    #20 wen <=1; wadr <= 7'd24; wdata <= 64'd1;
+    #20 wen <=0;
+    #20 wen <=1; wadr <= 7'd24; wdata <= 64'd9; ren <=1; radr <= 7'd24; //expect to read old data
+    #40
+    $display("Test 4a: rdata = %h, expected = 1", rdata);
+    assert(rdata ==64'd1) else $error("Test 4a failed! it should have read old data");
+    #20 wen <=0; ren <=0;
+    #20 ren <=1; radr <= 7'd24;
+    #40
+    $display("Test 4b: rdata = %h, expected = 9", rdata);
+    assert(rdata ==64'd9) else $error("Test 4b failed! it should now read the new data");
     
+
   end
 
   initial begin
