@@ -100,7 +100,7 @@ module ifmap_double_buffer_tb_v;
             #40; 
             #20 addr = l + k*IX0 + j*IX0*IY0 + i*IX0*IY0*IC1;
             #20;
-            #20 wen <= 1; wadr <= addr; wdata <= 64'h100;
+            #20 wen <= 1; wadr <= addr; wdata <= addr;
             #40;
             #20 wen <=0;
           end
@@ -117,8 +117,8 @@ module ifmap_double_buffer_tb_v;
             addr = l + k*IX0 + j*IX0*IY0 + i*IX0*IY0*IC1;
             #20 ren <=1; radr <= addr;
             #40;
-            $display("Test 3: rdata = %h, expected = 100", rdata);
-            assert(rdata == 64'h100) else $error("Test 3 failed!");
+            $display("Test 3: rdata = %h, expect increase sequentially", rdata);
+            assert(rdata == addr) else $error("Test 3 failed!");
             #20 ren <= 0;
           end
         end
