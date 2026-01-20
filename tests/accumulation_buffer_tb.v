@@ -86,12 +86,12 @@ module accumulation_buffer_tb;
     #20 wen <= 0; wadr <= 7'd22; wdata <= 64'd2;
     #20 ren <= 1; radr <= 7'd22;
     #40 
-    $display("Test 3a: rdata = %h, expected = 1");
+    $display("Test 3a: rdata = %h, expected = 1", rdata);
     assert(rdata ==64'd1) else $error("Test 3a failed! it wrote data when wen=0!");
     #20 wen <= 1; wadr <= 7'd23; wdata <= 64'd3;
     #20 ren <= 0; radr <= 7'd23;
     #40
-    $display("Test 3b: rdata = %h, expected = 1");
+    $display("Test 3b: rdata = %h, expected = 1", rdata);
     assert(rdata ==64'd1) else $error("Test 3b failed! it read data when ren=0!");
     
     $display("All tests passed!");
