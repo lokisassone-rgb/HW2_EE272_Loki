@@ -91,7 +91,7 @@ module ifmap_double_buffer_tb_v;
     assert(rdata == 64'h3) else $error("Test 2b failed!");
     #20 wen <= 0; ren <= 0;
 
-    $display("Starting Test Case 3: Sequentially write to a bank and read from it after switching");
+    $display("Starting Test Case 3: Sequentially write to all input addresses in bank (simulate input tiling) and read from it after switching");
     #20;
     for (int i = 0; i < IC0; i++) begin
       for (int j = 0; j < IC1; j++) begin
