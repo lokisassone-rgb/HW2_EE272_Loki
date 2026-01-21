@@ -158,8 +158,11 @@ class test;
         apply_stim();
     endtask
 
-    virtual task apply_stim();
+    virtual task automatic apply_stim();
         // Stimulus driver for adr_gen_sequential
+        adr_gen_sequential_item config_transaction;
+        adr_gen_sequential_item disable_config_transaction;
+        adr_gen_sequential_item transaction;
         $display ("T=%0t [adr_gen_sequential test] Starting ...", $time);
 
         stim_id = 0;
@@ -173,7 +176,7 @@ class test;
         e0.vif.rst_n = 1;
 
         // Apply configuration
-        adr_gen_sequential_item config_transaction = new;
+        config_transaction = new;
         config_transaction.config_en = 1;
         config_transaction.config_data = 10; // Example max address
         config_transaction.adr_en = 0;
@@ -181,7 +184,7 @@ class test;
         @ (negedge e0.vif.clk);
 
         // Disable config after one cycle
-        adr_gen_sequential_item disable_config_transaction = new;
+        disable_config_transaction = new;
         disable_config_transaction.config_en = 0;
         disable_config_transaction.adr_en = 0;
         drv_mbx.put(disable_config_transaction);
@@ -189,7 +192,7 @@ class test;
 
         // Generate address sequence with random stalls
         for (int i = 0; i < `TEST_LENGTH; i++) begin
-            adr_gen_sequential_item transaction = new;
+            transaction = new;
             transaction.config_en = 0;
 
             // Randomly decide to enable or disable adr_en
