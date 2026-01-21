@@ -115,13 +115,13 @@ class scoreboard;
           $display("T=%0t [Scoreboard] Ifmap_out Pass! Received = %h, expected = %h", $time, transaction.ifmap_out, ifmap_r_golden);
         end
         
-        if (transaction.weight_wen) begin
-          weight_r_golden = transaction.weight_in;
-        end
-
         if (transaction.en) begin
           ifmap_r_golden = transaction.ifmap_in;
           ofmap_r_golden = weight_r_golden * transaction.ifmap_in + transaction.ofmap_in;
+        end
+
+        if (transaction.weight_wen) begin
+          weight_r_golden = transaction.weight_in;
         end
 
         resp_id = resp_id + 1;
