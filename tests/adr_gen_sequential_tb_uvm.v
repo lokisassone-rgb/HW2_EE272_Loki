@@ -22,7 +22,7 @@ class adr_gen_sequential_item;
     rand bit config_en;
     bit [`BANK_ADDR_WIDTH - 1 : 0] adr;
     
-    function void print(int id = "");
+    function void print(int id = 0);
         $display("T=%0t [transaction_id=%0d] adr_en=%b config_data=%h adr=%h", $time, id, adr_en, config_data, adr);
     endfunction
 endclass;
@@ -74,7 +74,8 @@ class scoreboard;
     mailbox scb_mbx; // mailbox connected to monitor
     int resp_id; 
     
-    reg signed [`BANK_ADDR_WIDTH - 1 : 0] config_block_max;
+    bit signed [`BANK_ADDR_WIDTH - 1 : 0] config_block_max;
+    bit signed [`BANK_ADDR_WIDTH - 1 : 0] expected_adr;
 
     task run();
         forever begin
@@ -158,7 +159,7 @@ class test;
     endtask
 
     virtual task apply_stim();
-        mac_item transaction;
+        // Stimulus driver for adr_gen_sequential
         $display ("T=%0t [adr_gen_sequential test] Starting ...", $time);
 
         stim_id = 0;
@@ -228,14 +229,10 @@ module adr_gen_sequential_tb;
         .config_data(vif.config_data)
     );
 
-    assign vif.rst_n = rst_n;
-
     initial begin
         test t0;
 
         clk <= 0;
-        rst_n <= 0;
-        #40 rst_n <= 1;
         t0 = new(); 
         t0.e0.vif = vif;
         t0.run();
