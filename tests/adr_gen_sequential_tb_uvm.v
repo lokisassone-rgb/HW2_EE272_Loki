@@ -115,7 +115,7 @@ endclass
 // Environment class to instantiate driver, monitor, and scoreboard
 class env; 
     driver d0;
-    monito m0;
+    monitor m0;
     scoreboard s0;
     mailbox scb_mbx; // mailbox connecting monitor and scoreboard
     virtual adr_gen_sequential_if vif;
@@ -215,7 +215,6 @@ endclass
 module adr_gen_sequential_tb;
 
     reg clk;
-    reg rst_n;
 
     always #10 clk =~clk;
 
@@ -238,8 +237,6 @@ module adr_gen_sequential_tb;
         test t0;
 
         clk <= 0;
-        rst_n <= 0;
-        #20 rst_n <= 1;
         t0 = new(); 
         t0.e0.vif = vif;
         t0.run();
