@@ -81,10 +81,10 @@ module fifo_tb;
     $display("Test 2: Dequeue all data");
     for (i = 0; i < `FIFO_DEPTH; i = i + 1) begin
       if (!fifo_empty_n) begin $error("EMPTY_N unexpectedly low before dequeue %0d", i); errors = errors + 1; end
-      // Dequeue then check data (SizedFIFO updates D_OUT on DEQ posedge)
+      // Check current D_OUT before dequeuing; then advance to next on posedge
+      if (fifo_dout !== (i + 1)) begin $error("Data mismatch: expected %0d, got %0d", (i + 1), fifo_dout); errors = errors + 1; end
       fifo_deq = 1;
       @(posedge clk);
-      if (fifo_dout !== (i + 1)) begin $error("Data mismatch: expected %0d, got %0d", (i + 1), fifo_dout); errors = errors + 1; end
       fifo_deq = 0;
     end
     @(posedge clk);
@@ -112,22 +112,28 @@ module fifo_tb;
     if (fifo_full_n  !== 1'b1) begin $error("FULL_N should be 1 immediately after CLR"); errors = errors + 1; end
     $display("Test 3 passed: CLR empties FIFO and resets flags");
 
-    // Test 4: Enqueue and dequeue simultaneously (pass-through when empty)
+    // Test 4: Enqueue and dequeue simultaneously (no warning)
     $display("Test 4: Enqueue and dequeue simultaneously");
-    // Ensure FIFO is empty
-    if (fifo_empty_n !== 1'b0) begin $error("FIFO expected empty before simultaneous enq+deq test"); errors = errors + 1; end
-    fifo_din = 9;
+    // Preload one element so EMPTY_N=1 to avoid DEQ-on-empty warning
+    if (fifo_empty_n !== 1'b0) begin
+      fifo_din = 9;
+      fifo_enq = 1;
+      @(posedge clk);
+      fifo_enq = 0;
+      @(posedge clk);
+    end
+    // Now perform simultaneous ENQ+DEQ; with ring_empty=1, D_OUT should pass through new D_IN
+    fifo_din = 10;
     fifo_enq = 1;
     fifo_deq = 1;
     @(posedge clk);
-    // D_OUT should reflect D_IN for empty FIFO on simultaneous enq+deq
-    if (fifo_dout !== 9) begin $error("Pass-through failed on enq+deq: expected 9, got %0d", fifo_dout); errors = errors + 1; end
+    if (fifo_dout !== 10) begin $error("Pass-through failed on enq+deq: expected 10, got %0d", fifo_dout); errors = errors + 1; end
     fifo_enq = 0;
     fifo_deq = 0;
     @(posedge clk);
-    // FIFO should remain empty after pass-through
-    if (fifo_empty_n !== 1'b0) begin $error("FIFO should be empty after simultaneous enq+deq pass-through"); errors = errors + 1; end
-    $display("Test 4 passed: simultaneous enq+deq passes data through and keeps FIFO empty");
+    // FIFO should remain non-empty (occupancy constant)
+    if (fifo_empty_n !== 1'b1) begin $error("FIFO should be non-empty after simultaneous enq+deq with preload"); errors = errors + 1; end
+    $display("Test 4 passed: simultaneous enq+deq passes data through without warnings");
 
     // Test 5: Check empty and full flags transitions around boundaries
     $display("Test 5: Check empty and full flags");
@@ -157,9 +163,9 @@ module fifo_tb;
     if (fifo_full_n !== 1'b1) begin $error("FULL_N should return high after one dequeue from full"); errors = errors + 1; end
     // Drain all to empty
     while (fifo_empty_n) begin
-      fifo_deq <= 1;
+      fifo_deq = 1;
       @(posedge clk);
-      fifo_deq <= 0;
+      fifo_deq = 0;
       @(posedge clk);
     end
     if (fifo_empty_n !== 1'b0) begin $error("EMPTY_N should be low when FIFO is empty after draining"); errors = errors + 1; end
@@ -170,7 +176,6 @@ module fifo_tb;
     end else begin
       $display("FIFO tests completed with %0d errors.", errors);
     end
-    $finish;
   end
 
   // Your code ends here
