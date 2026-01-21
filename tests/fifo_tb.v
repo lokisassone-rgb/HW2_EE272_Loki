@@ -48,6 +48,8 @@ module fifo_tb;
       fifo_enq <= 1'b1;
       @(posedge clk);
       fifo_enq <= 1'b0;
+      // allow design NBAs to settle this cycle
+      #1;
     end
   endtask
 
@@ -57,6 +59,8 @@ module fifo_tb;
       @(negedge clk);
       fifo_deq <= 1'b1;
       @(posedge clk);
+      // allow design NBAs to update D_OUT then sample
+      #1;
       val = fifo_dout;
       fifo_deq <= 1'b0;
     end
@@ -114,7 +118,8 @@ module fifo_tb;
       pop(val); check(val == 4'hA, "Deq #1 == 0xA");
       pop(val); check(val == 4'hB, "Deq #2 == 0xB");
       pop(val); check(val == 4'hC, "Deq #3 == 0xC");
-      check(fifo_empty_n == 1'b0, "After drain: EMPTY_N==0");
+      // allow flags to settle after final pop
+      #1; check(fifo_empty_n == 1'b0, "After drain: EMPTY_N==0");
       check(fifo_full_n  == 1'b1, "After drain: FULL_N==1");
     end
 
@@ -125,8 +130,9 @@ module fifo_tb;
     clr <= 1'b1;
     @(posedge clk);
     clr <= 1'b0;
-    check(fifo_empty_n == 1'b0, "After CLR: EMPTY_N==0");
-    check(fifo_full_n  == 1'b1, "After CLR: FULL_N==1");
+    // sample flags a delta after clr edge
+    #1; check(fifo_empty_n == 1'b0, "After CLR: EMPTY_N==0");
+    #1; check(fifo_full_n  == 1'b1, "After CLR: FULL_N==1");
     begin
       reg [`DATA_WIDTH-1:0] val2;
       // Deq after clear should not return old data; fifo is empty
@@ -141,13 +147,13 @@ module fifo_tb;
     // Test 4: Simultaneous ENQ/DEQ (bypass and steady-state)
     // Case A: empty bypass
     @(negedge clk); fifo_din <= 4'h7; fifo_enq <= 1'b1; fifo_deq <= 1'b1; @(posedge clk);
-    check(fifo_dout == 4'h7, "Bypass when empty: D_OUT==DIN");
+    #1; check(fifo_dout == 4'h7, "Bypass when empty: D_OUT==DIN");
     fifo_enq <= 1'b0; fifo_deq <= 1'b0;
     check(fifo_empty_n == 1'b0, "Bypass leaves FIFO empty");
     // Case B: occupied steady-state
     push(4'h9);
     @(negedge clk); fifo_din <= 4'hE; fifo_enq <= 1'b1; fifo_deq <= 1'b1; @(posedge clk);
-    check(fifo_dout == 4'h9, "Simultaneous on occupied: D_OUT old head");
+    #1; check(fifo_dout == 4'h9, "Simultaneous on occupied: D_OUT old head");
     fifo_enq <= 1'b0; fifo_deq <= 1'b0;
     begin
       reg [`DATA_WIDTH-1:0] val4; pop(val4); check(val4 == 4'hE, "Next deq returns newly enqueued"); end
@@ -157,9 +163,9 @@ module fifo_tb;
     push(4'h2);
     begin reg [`DATA_WIDTH-1:0] v; pop(v); check(v==4'h1, "Wrap seq deq #1"); end
     push(4'h3);
-    check(fifo_full_n == 1'b1, "After wrap fill step: not full yet");
+    #1; check(fifo_full_n == 1'b1, "After wrap fill step: not full yet");
     push(4'h4);
-    check(fifo_full_n == 1'b0, "After wrap fill: full");
+    #1; check(fifo_full_n == 1'b0, "After wrap fill: full");
     begin
       reg [`DATA_WIDTH-1:0] v1;
       reg [`DATA_WIDTH-1:0] v2;
@@ -168,7 +174,7 @@ module fifo_tb;
       pop(v2); check(v2==4'h3, "Wrap deq #3");
       pop(v3); check(v3==4'h4, "Wrap deq #4");
     end
-    check(fifo_empty_n == 1'b0, "Wrap: empty at end");
+    #1; check(fifo_empty_n == 1'b0, "Wrap: empty at end");
 
     $display("\nTest Summary: %0d PASS, %0d FAIL\n", pass_count, fail_count);
     if (fail_count == 0) $finish; else $finish(2);
