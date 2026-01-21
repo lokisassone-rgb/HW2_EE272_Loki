@@ -68,30 +68,30 @@ module weight_double_buffer_tb_v;
     #20;  // Wait for reset to take effect
 
     $display("Starting Test Case 1: Write to write-bank and switch banks and verify it's readable");
-    #20 wen <= 1; wadr <= BANK_ADDR_WIDTH'd10; wdata <= DATA_WIDTH'h1;
+    #20 wen <= 1; wadr <= 10; wdata <= 1;
     #20 wen <= 0;
     #20 switch_banks <= 1;
-    #20 wen <= 1; wadr <= BANK_ADDR_WIDTH'd10; wdata <= DATA_WIDTH'h2;
+    #20 wen <= 1; wadr <= 10; wdata <= 2;
     #20 wen <= 0;
     #20;    
-    #20 ren <= 1; radr <= BANK_ADDR_WIDTH'd10;
+    #20 ren <= 1; radr <= 10;
     #40; // Wait for read latency
     $display("Test 1: rdata = %h, expected = 1", rdata);
-    assert(rdata == DATA_WIDTH'h1) else $error("Test 1 failed!");
+    assert(rdata == 1) else $error("Test 1 failed!");
     #20 ren <=0;
 
     $display("Starting Test Case 2: Simultaneous write to write-bank and read from read-bank");
-    #20 wen <= 1; wadr <= BANK_ADDR_WIDTH'd11; wdata <= DATA_WIDTH'h3;
-        ren <= 1; radr <= BANK_ADDR_WIDTH'd10;
+    #20 wen <= 1; wadr <= 11; wdata <= 3;
+        ren <= 1; radr <= 10;
     #40; // Wait for read latency
     $display("Test 2a: rdata = %h, expected = 1", rdata);
-    assert(rdata == DATA_WIDTH'h1) else $error("Test 2a failed!");
+    assert(rdata == 1) else $error("Test 2a failed!");
     #20 switch_banks <= 0;
     #20;
-    #20 ren <= 1; radr <= BANK_ADDR_WIDTH'd11;
+    #20 ren <= 1; radr <= 11;
     #40;
     $display("Test 2b: rdata = %h, expected = 3", rdata);
-    assert(rdata == DATA_WIDTH'h3) else $error("Test 2b failed!");
+    assert(rdata == 3) else $error("Test 2b failed!");
     #20 wen <= 0; ren <= 0;
 
     $display("Starting Test Case 3: Sequentially write to all weight addresses in bank (simulate weight tiling) and read from it after switching");
@@ -135,25 +135,25 @@ module weight_double_buffer_tb_v;
     #20;
 
     $display("Starting Test Case 4: Check both ren and wen disabled don't change outputs");
-    #20 wen <= 1; wadr <= BANK_ADDR_WIDTH'd22; wdata <= DATA_WIDTH'd1;
+    #20 wen <= 1; wadr <= 22; wdata <= 1;
     #20;
-    #20 wen <= 0; wadr <= BANK_ADDR_WIDTH'd22; wdata <= DATA_WIDTH'd2;
+    #20 wen <= 0; wadr <= 22; wdata <= 2;
     #20 switch_banks <= 0;
     #20;
-    #20 ren <= 1; radr <= BANK_ADDR_WIDTH'd22;
+    #20 ren <= 1; radr <= 22;
     #40 
     $display("Test 4a: rdata = %h, expected = 1", rdata);
-    assert(rdata ==DATA_WIDTH'd1) else $error("Test 4a failed! it wrote data when wen=0!");
+    assert(rdata == 1) else $error("Test 4a failed! it wrote data when wen=0!");
     #20 switch_banks <= 1;
     #20;
-    #20 wen <= 1; wadr <= BANK_ADDR_WIDTH'd23; wdata <= DATA_WIDTH'd3;
+    #20 wen <= 1; wadr <= 23; wdata <= 3;
     #20
     #20 switch_banks <= 0;
     #20;
-    #20 ren <= 0; radr <= BANK_ADDR_WIDTH'd23;
+    #20 ren <= 0; radr <= 23;
     #40
     $display("Test 4b: rdata = %h, expected = 1", rdata);
-    assert(rdata ==DATA_WIDTH'd1) else $error("Test 4b failed! it read data when ren=0!");
+    assert(rdata == 1) else $error("Test 4b failed! it read data when ren=0!");
 
 end
 
