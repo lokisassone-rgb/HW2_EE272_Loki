@@ -15,10 +15,10 @@ module fifo_tb;
   reg clk;
   reg rst_n;
   reg [`DATA_WIDTH - 1 : 0] fifo_din;
-  wire fifo_enq;
+  reg fifo_enq;
   wire fifo_full_n;
   wire [`DATA_WIDTH - 1 : 0] fifo_dout;
-  wire fifo_deq;
+  reg fifo_deq;
   wire fifo_empty_n;
   reg clr; 
 
@@ -43,58 +43,128 @@ module fifo_tb;
   );
 
   initial begin
-    clk <= 0;
-    rst_n <= 0;
+    integer i;
+    // Init
+    clk      <= 0;
+    rst_n    <= 0;
     fifo_din <= 0;
-    clr <= 0;
+    fifo_enq <= 0;
+    fifo_deq <= 0;
+    clr      <= 0;
 
     // Apply reset
-    #15;
+    repeat (2) @(posedge clk);
     rst_n <= 1;
+    @(posedge clk);
 
-    // Test 1: Enqueue data until full
-    force fifo_enq = 1'b1;  // drive enqueue for this test only
+    // Verify reset behaviour
+    $display("Reset check");
+    if (fifo_empty_n !== 1'b0) $fatal(1, "EMPTY_N should be 0 after reset");
+    if (fifo_full_n  !== 1'b1) $fatal(1, "FULL_N should be 1 after reset");
 
     // Test 1: Enqueue data until full
     $display("Test 1: Enqueue data until full");
-    repeat (`FIFO_DEPTH) begin
+    for (i = 0; i < `FIFO_DEPTH; i = i + 1) begin
+      // Only enqueue if not full
+      if (!fifo_full_n) $fatal(1, "FIFO reported full before reaching capacity at enq %0d", i);
+      fifo_din <= i + 1;
+      fifo_enq <= 1;
       @(posedge clk);
-      fifo_din <= fifo_din + 1;
+      fifo_enq <= 0;
     end
-
-    @(posedge clk); // allow flags to update
-    assert (fifo_full_n == 1'b0)
-      else $fatal(1, "FIFO should be full after %0d enqueues", `FIFO_DEPTH);
-    assert (fifo_empty_n == 1'b1)
-      else $fatal(1, "FIFO should not be empty when full");
-
-    // Clean up the force for later tests
-    release fifo_enq;
+    @(posedge clk);
+    if (fifo_full_n !== 1'b0) $fatal(1, "FULL_N did not deassert when FIFO reached capacity");
+    $display("Test 1 passed: FIFO becomes full after %0d enqueues", `FIFO_DEPTH);
 
     // Test 2: Dequeue all data
     $display("Test 2: Dequeue all data");
-    repeat (`FIFO_DEPTH) begin
-      #20;
+    for (i = 0; i < `FIFO_DEPTH; i = i + 1) begin
+      if (!fifo_empty_n) $fatal(1, "EMPTY_N unexpectedly low before dequeue %0d", i);
+      // Check data order before dequeuing
+      if (fifo_dout !== (i + 1)) $fatal(1, "Data mismatch: expected %0d, got %0d", (i + 1), fifo_dout);
+      fifo_deq <= 1;
+      @(posedge clk);
+      fifo_deq <= 0;
     end
+    @(posedge clk);
+    if (fifo_empty_n !== 1'b0) $fatal(1, "EMPTY_N did not assert (go low) after draining FIFO");
+    if (fifo_full_n  !== 1'b1) $fatal(1, "FULL_N not high after draining FIFO");
+    $display("Test 2 passed: drained FIFO in order and flags updated");
 
     // Test 3: Clear the FIFO
     $display("Test 3: Clear the FIFO");
-    fifo_din <= fifo_din + 1;
-    #20;
+    // Fill partially
+    for (i = 0; i < 2; i = i + 1) begin
+      if (!fifo_full_n) $fatal(1, "FIFO unexpectedly full during pre-clear enqueue %0d", i);
+      fifo_din <= i + 5;
+      fifo_enq <= 1;
+      @(posedge clk);
+      fifo_enq <= 0;
+    end
+    @(posedge clk);
+    // Now clear
     clr <= 1;
-    #20;
+    @(posedge clk);
     clr <= 0;
+    @(posedge clk);
+    if (fifo_empty_n !== 1'b0) $fatal(1, "EMPTY_N should be 0 immediately after CLR");
+    if (fifo_full_n  !== 1'b1) $fatal(1, "FULL_N should be 1 immediately after CLR");
+    $display("Test 3 passed: CLR empties FIFO and resets flags");
 
-    // Test 4: Enqueue and dequeue simultaneously
+    // Test 4: Enqueue and dequeue simultaneously (pass-through when empty)
     $display("Test 4: Enqueue and dequeue simultaneously");
-    fifo_din <= fifo_din + 1;
-    #10;
-    fifo_din <= fifo_din + 1;
-    #10;
+    // Ensure FIFO is empty
+    if (fifo_empty_n !== 1'b0) $fatal(1, "FIFO expected empty before simultaneous enq+deq test");
+    fifo_din <= 9;
+    fifo_enq <= 1;
+    fifo_deq <= 1;
+    @(posedge clk);
+    // D_OUT should reflect D_IN for empty FIFO on simultaneous enq+deq
+    if (fifo_dout !== 9) $fatal(1, "Pass-through failed on enq+deq: expected 9, got %0d", fifo_dout);
+    fifo_enq <= 0;
+    fifo_deq <= 0;
+    @(posedge clk);
+    // FIFO should remain empty after pass-through
+    if (fifo_empty_n !== 1'b0) $fatal(1, "FIFO should be empty after simultaneous enq+deq pass-through");
+    $display("Test 4 passed: simultaneous enq+deq passes data through and keeps FIFO empty");
 
-    // Test 5: Check empty and full flags
+    // Test 5: Check empty and full flags transitions around boundaries
     $display("Test 5: Check empty and full flags");
-    #20;
+    // Enqueue up to depth-1: should not be full
+    for (i = 0; i < (`FIFO_DEPTH - 1); i = i + 1) begin
+      if (!fifo_full_n) $fatal(1, "FULL_N should be high before reaching capacity at count %0d", i);
+      fifo_din <= i + 20;
+      fifo_enq <= 1;
+      @(posedge clk);
+      fifo_enq <= 0;
+    end
+    @(posedge clk);
+    if (fifo_full_n !== 1'b1) $fatal(1, "FULL_N should still be high at depth-1");
+    // Enqueue last element to reach full
+    fifo_din <= 99;
+    fifo_enq <= 1;
+    @(posedge clk);
+    fifo_enq <= 0;
+    @(posedge clk);
+    if (fifo_full_n !== 1'b0) $fatal(1, "FULL_N should be low when FIFO is full");
+    // Dequeue one: should clear full condition
+    if (!fifo_empty_n) $fatal(1, "EMPTY_N unexpectedly low before boundary dequeue");
+    fifo_deq <= 1;
+    @(posedge clk);
+    fifo_deq <= 0;
+    @(posedge clk);
+    if (fifo_full_n !== 1'b1) $fatal(1, "FULL_N should return high after one dequeue from full");
+    // Drain all to empty
+    while (fifo_empty_n) begin
+      fifo_deq <= 1;
+      @(posedge clk);
+      fifo_deq <= 0;
+      @(posedge clk);
+    end
+    if (fifo_empty_n !== 1'b0) $fatal(1, "EMPTY_N should be low when FIFO is empty after draining");
+    $display("Test 5 passed: flags behave correctly at empty/full boundaries");
+
+    $display("All FIFO tests passed.");
     $finish;
   end
 
