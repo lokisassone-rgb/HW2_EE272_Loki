@@ -161,9 +161,12 @@ module fifo_tb;
     push(4'h4);
     check(fifo_full_n == 1'b0, "After wrap fill: full");
     begin
-      reg [`DATA_WIDTH-1:0] v1; pop(v1); check(v1==4'h2, "Wrap deq #2");
-      reg [`DATA_WIDTH-1:0] v2; pop(v2); check(v2==4'h3, "Wrap deq #3");
-      reg [`DATA_WIDTH-1:0] v3; pop(v3); check(v3==4'h4, "Wrap deq #4");
+      reg [`DATA_WIDTH-1:0] v1;
+      reg [`DATA_WIDTH-1:0] v2;
+      reg [`DATA_WIDTH-1:0] v3;
+      pop(v1); check(v1==4'h2, "Wrap deq #2");
+      pop(v2); check(v2==4'h3, "Wrap deq #3");
+      pop(v3); check(v3==4'h4, "Wrap deq #4");
     end
     check(fifo_empty_n == 1'b0, "Wrap: empty at end");
 
