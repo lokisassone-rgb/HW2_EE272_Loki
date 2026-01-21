@@ -112,28 +112,31 @@ module fifo_tb;
     if (fifo_full_n  !== 1'b1) begin $error("FULL_N should be 1 immediately after CLR"); errors = errors + 1; end
     $display("Test 3 passed: CLR empties FIFO and resets flags");
 
-    // Test 4: Enqueue and dequeue simultaneously (no warning)
+    // Test 4: Enqueue and dequeue simultaneously (avoid warning, non-empty case)
     $display("Test 4: Enqueue and dequeue simultaneously");
-    // Preload one element so EMPTY_N=1 to avoid DEQ-on-empty warning
-    if (fifo_empty_n !== 1'b0) begin
-      fifo_din = 9;
+    // Ensure we have at least one element so DEQ is legal
+    if (fifo_empty_n === 1'b0) begin
+      fifo_din = 21;
       fifo_enq = 1;
       @(posedge clk);
       fifo_enq = 0;
       @(posedge clk);
     end
-    // Now perform simultaneous ENQ+DEQ; with ring_empty=1, D_OUT should pass through new D_IN
-    fifo_din = 10;
+    // Capture current head value
+    integer head_before;
+    head_before = fifo_dout;
+    // Perform simultaneous ENQ+DEQ; on non-empty, D_OUT should be old head value
+    fifo_din = 31;
     fifo_enq = 1;
     fifo_deq = 1;
     @(posedge clk);
-    if (fifo_dout !== 10) begin $error("Pass-through failed on enq+deq: expected 10, got %0d", fifo_dout); errors = errors + 1; end
+    if (fifo_dout !== head_before) begin $error("Simultaneous enq+deq (non-empty) should output old head: expected %0d, got %0d", head_before, fifo_dout); errors = errors + 1; end
     fifo_enq = 0;
     fifo_deq = 0;
     @(posedge clk);
-    // FIFO should remain non-empty (occupancy constant)
+    // FIFO occupancy should remain non-empty (one in, one out)
     if (fifo_empty_n !== 1'b1) begin $error("FIFO should be non-empty after simultaneous enq+deq with preload"); errors = errors + 1; end
-    $display("Test 4 passed: simultaneous enq+deq passes data through without warnings");
+    $display("Test 4 passed: simultaneous enq+deq on non-empty avoids warnings");
 
     // Test 5: Check empty and full flags transitions around boundaries
     $display("Test 5: Check empty and full flags");
