@@ -121,7 +121,7 @@ module weight_double_buffer_tb_v;
         for (int k = 0; k < FY; k++) begin
           for (int l = 0; l < OC0; l++) begin
             for (int m = 0; m < IC0; m++) begin
-              #20 addr = m + l*IC0 + k*IC0*OC0 + j*IC0*OC0*FY + i*IC0*OC0*FY*FX;
+              addr = m + l*IC0 + k*IC0*OC0 + j*IC0*OC0*FY + i*IC0*OC0*FY*FX;
               #20 ren <=1; radr <= addr;
               #40;
               $display("Test 3: addr=%0d rdata = %h, expect = %h", addr, rdata, addr);
