@@ -53,17 +53,32 @@ module fifo_tb;
     rst_n <= 1;
 
     // Test 1: Enqueue data until full
+    force fifo_enq = 1'b1;  // drive enqueue for this test only
+
+    // Test 1: Enqueue data until full
+    $display("Test 1: Enqueue data until full");
     repeat (`FIFO_DEPTH) begin
+      @(posedge clk);
       fifo_din <= fifo_din + 1;
-      #20;
     end
 
+    @(posedge clk); // allow flags to update
+    assert (fifo_full_n == 1'b0)
+      else $fatal(1, "FIFO should be full after %0d enqueues", `FIFO_DEPTH);
+    assert (fifo_empty_n == 1'b1)
+      else $fatal(1, "FIFO should not be empty when full");
+
+    // Clean up the force for later tests
+    release fifo_enq;
+
     // Test 2: Dequeue all data
+    $display("Test 2: Dequeue all data");
     repeat (`FIFO_DEPTH) begin
       #20;
     end
 
     // Test 3: Clear the FIFO
+    $display("Test 3: Clear the FIFO");
     fifo_din <= fifo_din + 1;
     #20;
     clr <= 1;
@@ -71,12 +86,14 @@ module fifo_tb;
     clr <= 0;
 
     // Test 4: Enqueue and dequeue simultaneously
+    $display("Test 4: Enqueue and dequeue simultaneously");
     fifo_din <= fifo_din + 1;
     #10;
     fifo_din <= fifo_din + 1;
     #10;
 
     // Test 5: Check empty and full flags
+    $display("Test 5: Check empty and full flags");
     #20;
     $finish;
   end
