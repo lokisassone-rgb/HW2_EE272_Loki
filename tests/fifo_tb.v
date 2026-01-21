@@ -45,17 +45,17 @@ module fifo_tb;
   initial begin
     integer i, errors;
     // Init
-    clk      <= 0;
-    rst_n    <= 0;
-    fifo_din <= 0;
-    fifo_enq <= 0;
-    fifo_deq <= 0;
-    clr      <= 0;
-    errors   <= 0;
+    clk      = 0;
+    rst_n    = 0;
+    fifo_din = 0;
+    fifo_enq = 0;
+    fifo_deq = 0;
+    clr      = 0;
+    errors   = 0;
 
     // Apply reset
     repeat (2) @(posedge clk);
-    rst_n <= 1;
+    rst_n = 1;
     @(posedge clk);
 
     // Verify reset behaviour
@@ -68,10 +68,10 @@ module fifo_tb;
     for (i = 0; i < `FIFO_DEPTH; i = i + 1) begin
       // Only enqueue if not full
       if (!fifo_full_n) begin $error("FIFO reported full before reaching capacity at enq %0d", i); errors = errors + 1; end
-      fifo_din <= i + 1;
-      fifo_enq <= 1;
+      fifo_din = i + 1;
+      fifo_enq = 1;
       @(posedge clk);
-      fifo_enq <= 0;
+      fifo_enq = 0;
     end
     @(posedge clk);
     if (fifo_full_n !== 1'b0) begin $error("FULL_N did not deassert when FIFO reached capacity"); errors = errors + 1; end
@@ -81,11 +81,11 @@ module fifo_tb;
     $display("Test 2: Dequeue all data");
     for (i = 0; i < `FIFO_DEPTH; i = i + 1) begin
       if (!fifo_empty_n) begin $error("EMPTY_N unexpectedly low before dequeue %0d", i); errors = errors + 1; end
-      // Check data order before dequeuing
-      if (fifo_dout !== (i + 1)) begin $error("Data mismatch: expected %0d, got %0d", (i + 1), fifo_dout); errors = errors + 1; end
-      fifo_deq <= 1;
+      // Dequeue then check data (SizedFIFO updates D_OUT on DEQ posedge)
+      fifo_deq = 1;
       @(posedge clk);
-      fifo_deq <= 0;
+      if (fifo_dout !== (i + 1)) begin $error("Data mismatch: expected %0d, got %0d", (i + 1), fifo_dout); errors = errors + 1; end
+      fifo_deq = 0;
     end
     @(posedge clk);
     if (fifo_empty_n !== 1'b0) begin $error("EMPTY_N did not assert (go low) after draining FIFO"); errors = errors + 1; end
@@ -97,16 +97,16 @@ module fifo_tb;
     // Fill partially
     for (i = 0; i < 2; i = i + 1) begin
       if (!fifo_full_n) begin $error("FIFO unexpectedly full during pre-clear enqueue %0d", i); errors = errors + 1; end
-      fifo_din <= i + 5;
-      fifo_enq <= 1;
+      fifo_din = i + 5;
+      fifo_enq = 1;
       @(posedge clk);
-      fifo_enq <= 0;
+      fifo_enq = 0;
     end
     @(posedge clk);
     // Now clear
-    clr <= 1;
+    clr = 1;
     @(posedge clk);
-    clr <= 0;
+    clr = 0;
     @(posedge clk);
     if (fifo_empty_n !== 1'b0) begin $error("EMPTY_N should be 0 immediately after CLR"); errors = errors + 1; end
     if (fifo_full_n  !== 1'b1) begin $error("FULL_N should be 1 immediately after CLR"); errors = errors + 1; end
@@ -116,14 +116,14 @@ module fifo_tb;
     $display("Test 4: Enqueue and dequeue simultaneously");
     // Ensure FIFO is empty
     if (fifo_empty_n !== 1'b0) begin $error("FIFO expected empty before simultaneous enq+deq test"); errors = errors + 1; end
-    fifo_din <= 9;
-    fifo_enq <= 1;
-    fifo_deq <= 1;
+    fifo_din = 9;
+    fifo_enq = 1;
+    fifo_deq = 1;
     @(posedge clk);
     // D_OUT should reflect D_IN for empty FIFO on simultaneous enq+deq
     if (fifo_dout !== 9) begin $error("Pass-through failed on enq+deq: expected 9, got %0d", fifo_dout); errors = errors + 1; end
-    fifo_enq <= 0;
-    fifo_deq <= 0;
+    fifo_enq = 0;
+    fifo_deq = 0;
     @(posedge clk);
     // FIFO should remain empty after pass-through
     if (fifo_empty_n !== 1'b0) begin $error("FIFO should be empty after simultaneous enq+deq pass-through"); errors = errors + 1; end
@@ -134,25 +134,25 @@ module fifo_tb;
     // Enqueue up to depth-1: should not be full
     for (i = 0; i < (`FIFO_DEPTH - 1); i = i + 1) begin
       if (!fifo_full_n) begin $error("FULL_N should be high before reaching capacity at count %0d", i); errors = errors + 1; end
-      fifo_din <= i + 20;
-      fifo_enq <= 1;
+      fifo_din = i + 20;
+      fifo_enq = 1;
       @(posedge clk);
-      fifo_enq <= 0;
+      fifo_enq = 0;
     end
     @(posedge clk);
     if (fifo_full_n !== 1'b1) begin $error("FULL_N should still be high at depth-1"); errors = errors + 1; end
     // Enqueue last element to reach full
-    fifo_din <= 99;
-    fifo_enq <= 1;
+    fifo_din = 99;
+    fifo_enq = 1;
     @(posedge clk);
-    fifo_enq <= 0;
+    fifo_enq = 0;
     @(posedge clk);
     if (fifo_full_n !== 1'b0) begin $error("FULL_N should be low when FIFO is full"); errors = errors + 1; end
     // Dequeue one: should clear full condition
     if (!fifo_empty_n) begin $error("EMPTY_N unexpectedly low before boundary dequeue"); errors = errors + 1; end
-    fifo_deq <= 1;
+    fifo_deq = 1;
     @(posedge clk);
-    fifo_deq <= 0;
+    fifo_deq = 0;
     @(posedge clk);
     if (fifo_full_n !== 1'b1) begin $error("FULL_N should return high after one dequeue from full"); errors = errors + 1; end
     // Drain all to empty
