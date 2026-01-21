@@ -121,14 +121,12 @@ module weight_double_buffer_tb_v;
         for (int k = 0; k < FY; k++) begin
           for (int l = 0; l < OC0; l++) begin
             for (int m = 0; m < IC0; m++) begin
-              addr = m + l*IC0 + k*IC0*OC0 + j*IC0*OC0*FY + i*IC0*OC0*FY*FX;
-              #20 radr <= addr;  // Set address first
-              #20 ren <= 1;      // Then enable read
-              #40;               // Wait for read latency (2 cycles)
+              #20 addr = m + l*IC0 + k*IC0*OC0 + j*IC0*OC0*FY + i*IC0*OC0*FY*FX;
+              #20 ren <=1; radr <= addr;
+              #40;
               $display("Test 3: addr=%0d rdata = %h, expect = %h", addr, rdata, addr);
               assert(rdata == addr) else $error("Test 3 failed at addr %0d!", addr);
               #20 ren <= 0;
-              #20;               // Wait before next iteration
             end
           end
         end
