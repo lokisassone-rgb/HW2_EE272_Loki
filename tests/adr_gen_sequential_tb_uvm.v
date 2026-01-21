@@ -62,6 +62,7 @@ class monitor;
             transaction.adr_en = vif.adr_en; 
             transaction.config_en = vif.config_en;
             transaction.config_data = vif.config_data;
+            
             transaction.adr = vif.adr;
 
             scb_mbx.put(transaction);
@@ -71,19 +72,15 @@ endclass
 
 class scoreboard; 
     mailbox scb_mbx; // mailbox connected to monitor
-
     int resp_id; 
-    bit [`BANK_ADDR_WIDTH - 1 : 0] expected_adr;
-
-    bit [`BANK_ADDR_WIDTH - 1 : 0] config_block_max;
+    
+    reg signed [`BANK_ADDR_WIDTH - 1 : 0] config_block_max;
 
     task run();
-        resp_id = 0;
-        expected_adr = 0;
-        config_block_max = 0;
-
         forever begin
             adr_gen_sequential_item transaction;
+            resp_id = 0;
+
             scb_mbx.get(transaction);
 
             // Check for config_en
@@ -125,15 +122,14 @@ class env;
         m0 = new;
         s0 = new;
         scb_mbx = new();
-
-        m0.scb_mbx = scb_mbx;
-        s0.scb_mbx = scb_mbx;
     endfunction
 
     virtual task run();
         d0.vif = vif;
         m0.vif = vif;
-
+        m0.scb_mbx = scb_mbx;
+        s0.scb_mbx = scb_mbx;
+        
         fork
             s0.run();
             d0.run();
@@ -161,10 +157,11 @@ class test;
         apply_stim();
     endtask
 
-    task apply_stim();
+    virtual task apply_stim();
+        mac_item transaction;
         $display ("T=%0t [adr_gen_sequential test] Starting ...", $time);
-        stim_id = 0;
 
+        stim_id = 0;
         // Initial reset
         e0.vif.rst_n = 0;
         e0.vif.adr_en = 0;
@@ -237,6 +234,8 @@ module adr_gen_sequential_tb;
         test t0;
 
         clk <= 0;
+        rst_n <= 0;
+        #40 rst_n <= 1;
         t0 = new(); 
         t0.e0.vif = vif;
         t0.run();
