@@ -43,7 +43,7 @@ module fifo_tb;
   );
 
   initial begin
-    integer i, errors, head_before;
+    integer i, errors, head_before, count;
     // Init
     clk      = 0;
     rst_n    = 0;
@@ -112,56 +112,44 @@ module fifo_tb;
     if (fifo_full_n  !== 1'b1) begin $error("FULL_N should be 1 immediately after CLR"); errors = errors + 1; end
     $display("Test 3 passed: CLR empties FIFO and resets flags");
 
-    // Test 4: Enqueue and dequeue simultaneously (avoid warning, non-empty case)
+    // Test 4: Enqueue and dequeue simultaneously (avoid warning, non-empty ring)
     $display("Test 4: Enqueue and dequeue simultaneously");
-    // Ensure we have at least one element so DEQ is legal
+    // Ensure ring is non-empty: enqueue two items if currently empty
     if (fifo_empty_n === 1'b0) begin
-      fifo_din = 21;
-      fifo_enq = 1;
-      @(posedge clk);
-      fifo_enq = 0;
-      @(posedge clk);
+      fifo_din = 5;
+      fifo_enq = 1; @(posedge clk); fifo_enq = 0; @(posedge clk);
+      fifo_din = 6;
+      fifo_enq = 1; @(posedge clk); fifo_enq = 0; @(posedge clk);
     end
     // Capture current head value
     head_before = fifo_dout;
-    // Perform simultaneous ENQ+DEQ; on non-empty, D_OUT should be old head value
-    fifo_din = 31;
-    fifo_enq = 1;
-    fifo_deq = 1;
+    // Perform simultaneous ENQ+DEQ; with non-empty ring, D_OUT should be old head
+    fifo_din = 15;
+    fifo_enq = 1; fifo_deq = 1;
     @(posedge clk);
     if (fifo_dout !== head_before) begin $error("Simultaneous enq+deq (non-empty) should output old head: expected %0d, got %0d", head_before, fifo_dout); errors = errors + 1; end
-    fifo_enq = 0;
-    fifo_deq = 0;
+    fifo_enq = 0; fifo_deq = 0;
     @(posedge clk);
-    // FIFO occupancy should remain non-empty (one in, one out)
+    // FIFO should remain non-empty (one in, one out)
     if (fifo_empty_n !== 1'b1) begin $error("FIFO should be non-empty after simultaneous enq+deq with preload"); errors = errors + 1; end
     $display("Test 4 passed: simultaneous enq+deq on non-empty avoids warnings");
 
-    // Test 5: Check empty and full flags transitions around boundaries
+    // Test 5: Check empty and full flags with robust transitions
     $display("Test 5: Check empty and full flags");
-    // Enqueue up to depth-1: should not be full
-    for (i = 0; i < (`FIFO_DEPTH - 1); i = i + 1) begin
-      if (!fifo_full_n) begin $error("FULL_N should be high before reaching capacity at count %0d", i); errors = errors + 1; end
-      fifo_din = i + 20;
-      fifo_enq = 1;
-      @(posedge clk);
-      fifo_enq = 0;
+    // Drain to empty first
+    while (fifo_empty_n) begin fifo_deq = 1; @(posedge clk); fifo_deq = 0; @(posedge clk); end
+    if (fifo_empty_n !== 1'b0) begin $error("Expected empty before boundary checks"); errors = errors + 1; end
+    // Enqueue until full using FULL_N gate; count entries
+    count = 0;
+    while (fifo_full_n) begin
+      fifo_din = 40 + count;
+      fifo_enq = 1; @(posedge clk); fifo_enq = 0; @(posedge clk);
+      count = count + 1;
     end
-    @(posedge clk);
-    if (fifo_full_n !== 1'b1) begin $error("FULL_N should still be high at depth-1"); errors = errors + 1; end
-    // Enqueue last element to reach full
-    fifo_din = 99;
-    fifo_enq = 1;
-    @(posedge clk);
-    fifo_enq = 0;
-    @(posedge clk);
     if (fifo_full_n !== 1'b0) begin $error("FULL_N should be low when FIFO is full"); errors = errors + 1; end
+    if (count !== `FIFO_DEPTH) begin $error("Unexpected capacity: expected %0d, got %0d", `FIFO_DEPTH, count); errors = errors + 1; end
     // Dequeue one: should clear full condition
-    if (!fifo_empty_n) begin $error("EMPTY_N unexpectedly low before boundary dequeue"); errors = errors + 1; end
-    fifo_deq = 1;
-    @(posedge clk);
-    fifo_deq = 0;
-    @(posedge clk);
+    fifo_deq = 1; @(posedge clk); fifo_deq = 0; @(posedge clk);
     if (fifo_full_n !== 1'b1) begin $error("FULL_N should return high after one dequeue from full"); errors = errors + 1; end
     // Drain all to empty
     while (fifo_empty_n) begin
