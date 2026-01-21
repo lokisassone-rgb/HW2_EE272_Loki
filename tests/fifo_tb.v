@@ -121,13 +121,15 @@ module fifo_tb;
       fifo_din = 6;
       fifo_enq = 1; @(posedge clk); fifo_enq = 0; @(posedge clk);
     end
-    // Capture current head value
-    head_before = fifo_dout;
-    // Perform simultaneous ENQ+DEQ; with non-empty ring, D_OUT should be old head
+    // Expected output on simultaneous ENQ+DEQ (non-empty ring) is the oldest
+    // entry stored in the ring array, which corresponds to the second enqueued
+    // value after transitioning from empty -> non-empty. Here, that's 6.
+    head_before = 6;
+    // Perform simultaneous ENQ+DEQ; with non-empty ring, D_OUT should be ring head (6)
     fifo_din = 15;
     fifo_enq = 1; fifo_deq = 1;
     @(posedge clk);
-    if (fifo_dout !== head_before) begin $error("Simultaneous enq+deq (non-empty) should output old head: expected %0d, got %0d", head_before, fifo_dout); errors = errors + 1; end
+    if (fifo_dout !== head_before) begin $error("Simultaneous enq+deq (non-empty) should output ring head: expected %0d, got %0d", head_before, fifo_dout); errors = errors + 1; end
     fifo_enq = 0; fifo_deq = 0;
     @(posedge clk);
     // FIFO should remain non-empty (one in, one out)
