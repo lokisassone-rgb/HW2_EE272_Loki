@@ -43,7 +43,7 @@ module fifo_tb;
   );
 
   initial begin
-    integer i, errors;
+    integer i, errors, head_before;
     // Init
     clk      = 0;
     rst_n    = 0;
@@ -123,7 +123,6 @@ module fifo_tb;
       @(posedge clk);
     end
     // Capture current head value
-    integer head_before;
     head_before = fifo_dout;
     // Perform simultaneous ENQ+DEQ; on non-empty, D_OUT should be old head value
     fifo_din = 31;
