@@ -230,7 +230,7 @@ module fifo_tb;
     if (fifo_empty_n !== 1'b0) begin 
       $error("EMPTY_N should be low when FIFO is empty after draining"); 
       errors = errors + 1; 
-      end
+      fdend
     $display("Test 5 passed: flags behave correctly at empty/full boundaries");
 
     if (errors == 0) begin
